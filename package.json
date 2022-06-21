@@ -1,0 +1,44 @@
+{
+  "name": "gggsmtp-server-docker",
+  "version": "1.0.0",
+  "description": "Docker container for running test-smtp-server in a GitHub workflow.",
+  "scripts": {
+    "compile": "tsc",
+    "build": "ncc build src/index.ts -t -d",
+    "build:ncc": "ncc build src/index.ts -t -d",
+    "build:tar": "tar -czf serv.tar.gz Dockerfile .dockerignore dist/index.js",
+    "build:pack": "npm run build:ncc && npm run build:tar",
+    "docker:build": "docker build -t webstech/alpine-git .",
+    "docker:run": "docker run -dt --rm --name smtp -p 1025:1025 -v %cd%/../gggmail2:/usr/src/app/mail -e MAILREPO=./mail webstech/alpine-git",
+    "docker:stop": "docker stop smtp",
+    "docker:chown": "docker exec -it -u root smtp chown -R node /usr/src/app/mail",
+    "lint": "eslint --ignore-path .gitignore -c .eslintrc.js --ext .ts,.js \"src/**/*.{ts,tsx,mjs,js}\"",
+    "test:send": "node build/sendTest.js --port 1025"
+  },
+  "author": "Chris. Webster <chris@webstech.net> (https://www.webstech.com/)",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/mailparser": "^3.4.0",
+    "@types/nodemailer": "^6.4.4",
+    "@types/smtp-server": "^3.5.7",
+    "@typescript-eslint/eslint-plugin": "^5.29.0",
+    "@typescript-eslint/parser": "^5.29.0",
+    "@vercel/ncc": "^0.34.0",
+    "commander": "^9.3.0",
+    "eslint": "^8.18.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-jsdoc": "^39.3.3",
+    "ts-node": "*",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "mailparser": "^3.5.0",
+    "nodemailer": "^6.7.5",
+    "simple-git": "^3.8.0",
+    "smtp-server": "^3.11.0",
+    "test-smtp-server": "^0.9.4"
+  },
+  "engines": {
+    "node": ">= 16.0.0"
+  }
+}

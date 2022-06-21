@@ -1,0 +1,62 @@
+name: smtp server start Action
+author: webstech
+description: >
+  This is a GitHub action to start a test smtp server in a docker container.
+  The purpose is to provide a test scenario where an action will send emails.
+  The server will save the emails in a git repo and reply to them, also in the
+  git repo.
+
+inputs:
+  token:
+    description: A repo scoped GitHub Personal Access Token.
+    required: true
+  mail:
+    description: The location of the email repository.
+    required: true
+  port:
+    description: port to listen on for the SMTP server.
+    required: false
+    default: 1025
+  timeout:
+    description: Scan interval for new emails.
+    required: false
+    default: '1'
+  file:
+    description: Name of the file to be updated in the email repo.
+    required: false
+    default: '1'
+  git-author:
+    description: The author of the commits to the email repository.
+    required: true
+  git-email:
+    description: The email of the commits to the email repository.
+    required: true
+
+# see https://github.com/actions/runner/issues/241 for the shell workaround
+runs:
+  using: "composite"
+  steps:
+    - id: docker-start-smtp-server
+      run: |
+        docker run -idt --rm --name smtp --user node \
+          -p ${{ inputs.port }}:${{ inputs.port }} \
+          -v $GITHUB_WORKSPACE/${{ inputs.mail }}:/usr/src/app/mail \
+          -e MAILREPO=./mail \
+          -e MAILFILE=${{ inputs.file }} \
+          -e MAILTIMEOUT=${{ inputs.timeout }} \
+          -e MAILPORT=${{ inputs.port }} \
+          -e MAIL-GIT-AUTHOR="${{ inputs.git-author }}" \
+          -e MAIL-GIT-EMAIL=${{ inputs.git-email }} \
+           webstech/alpine-git
+      shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
+    - run: sleep 2
+      shell: bash
+    - id: docker-reset-email-owner
+      run: docker exec -it -u root smtp chown -R node /usr/src/app/mail
+      shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
+    - run: docker ps -a
+      shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
+
+branding:
+  icon: 'target'
+  color: 'gray-dark'

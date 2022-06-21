@@ -1,0 +1,24 @@
+name: smtp server stop Action
+author: webstech
+description: >
+  This is a GitHub action to stop a test smtp server in a docker container.
+  The purpose is to provide a test scenario where an action will send emails.
+  The server will save the emails in a git repo and reply to them, also in the
+  git repo.
+
+# see https://github.com/actions/runner/issues/241 for the shell workaround
+runs:
+  using: "composite"
+  steps:
+    - run: sleep 2
+      shell: bash
+    - id: docker-reset-email-access
+      run: docker exec -it -u root smtp chmod -R 777 /usr/src/app/mail
+      shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
+    - id: docker-stop-smtp-server
+      run: docker stop smtp
+      shell: 'script -q -e -c "bash --noprofile --norc -eo pipefail {0}"'
+
+branding:
+  icon: 'target'
+  color: 'gray-dark'
