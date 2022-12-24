@@ -55,6 +55,7 @@ export class emailHandler {
     this.smtpserver.startServer(); // start listening
     console.log(`Listening on port ${this.smtpserver.getPort()}`);
     console.log(`Mail repo is ${this.repoDir}/${this.file}`);
+    console.log(`Timeout is ${this.timeoutMS}`);
 
     let terminating = false;
 
@@ -91,17 +92,14 @@ export class emailHandler {
 
       for (const mail of mails.slice(this.repliedMail, this.seenMail)) {
         console.log(`Checking mail entry <${this.repliedMail}>`);
-        console.log(mail.envelope);
+        console.log(mail.buffer);
         const parsed = await mail.getParsed();
-        console.log(JSON.stringify(parsed, null, 2));
 
         const builder = new MailComposer(this.buildReply(parsed));
         const buff = await builder.compile().build();
         await this.gitUpdate(buff, ["Update", "Reply"]);
         this.repliedMail++;
       }
-    } else {
-      // console.log(Date());
     }
   }
 
